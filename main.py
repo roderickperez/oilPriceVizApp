@@ -8,7 +8,14 @@ def load_and_format_data(path, date_format=None):
     if date_format:
         df['Date'] = pd.to_datetime(df['Date'], format=date_format)
     else:
-        df['Date'] = pd.to_datetime(df['Date'])
+        # Check if the data is likely to be yearly based on the length of the date column's first entry
+        # Assuming that a 4-character string in 'Date' implies a year-only format
+        if df['Date'].apply(lambda x: len(str(x))).iloc[0] == 4:
+            df['Date'] = pd.to_datetime(df['Date'], format='%Y')
+            # Optionally, assign the first day of the year to each entry
+            df['Date'] = df['Date'].apply(lambda x: pd.Timestamp(year=x.year, month=1, day=1))
+        else:
+            df['Date'] = pd.to_datetime(df['Date'])
     return df
 
 # Main function to run the app
