@@ -79,6 +79,7 @@ def run():
     # Combine future_df with df for plotting purposes (not used for training)
     combined_df = pd.concat([df, future_df], ignore_index=True)
 
+
     # Separate training and test data
     train_df = df.iloc[:training_size]
     test_df = df.iloc[training_size:].copy()  # This includes all data points beyond the training set
@@ -92,7 +93,14 @@ def run():
 
         # Now, it's safe to assign predictions to test_df without causing a warning
         test_df['Predictions'] = predictions
-
+        
+        # Make predictions for the future dates
+        future_predictions = simple_linear_regression(
+            df[['DateOrdinal']], df['Brent Spot Price' if oil_type == 'Brent' else 'WTI Spot Price'],
+            future_df[['DateOrdinal']]
+        )
+        future_df['Predictions'] = future_predictions
+        
 
     # Plotting
     fig = px.line(df, x='Date', y='Brent Spot Price' if oil_type == 'Brent' else 'WTI Spot Price', title=f'{oil_type} Spot Price Over Time ({data_frequency})')
@@ -108,8 +116,9 @@ def run():
 
     # Plot predictions if available
     if model_name == "Linear Regression":
-        fig.add_scatter(x=test_df['Date'], y=test_df['Predictions'], mode='lines', name='Predictions')
-
+        fig.add_scatter(x=test_df['Date'], y=test_df['Predictions'], mode='lines', name='Test Prediction')
+        fig.add_scatter(x=future_df['Date'], y=future_df['Predictions'], mode='lines', name='Future Prediction')
+        
     st.plotly_chart(fig, use_container_width=True)
 
 
